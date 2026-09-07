@@ -1,5 +1,6 @@
 ﻿@page "/"
-@implements IDisposable;
+
+@inject HardwareService HardwareService
 
 <PageTitle>Home</PageTitle>
 
@@ -18,37 +19,26 @@
         </MudStack>
     </MudItem>
     <MudItem>
-        @Clock.ToString("hh:mm:ss tt")
+        @HardwareService.Clock.ToString("hh:mm:ss tt")
+
+<p>@HardwareService.IsTriggered</p>
     </MudItem>
 </MudGrid>
 @code {
 
-    public DateTime Clock { get; set; }
-
-    private bool _isRunning = true;
-
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        await base.OnInitializedAsync();
-        _ = Task.Factory.StartNew(() =>
-         {
-             while (_isRunning)
-             {
-                 Clock = DateTime.Now;
-                 InvokeAsync(StateHasChanged);
-                 Thread.Sleep(1000);
-             }
-         }, TaskCreationOptions.LongRunning);
+        HardwareService.PropertyChanged += (sender, args) =>
+        {
+            InvokeAsync(StateHasChanged);
+
+        };
+        base.OnInitialized();
     }
 
     void ButtonClicked(MouseEventArgs args)
     {
         Console.WriteLine($"Button clicked at {DateTime.Now}");
-    }
-
-    public void Dispose()
-    {
-        _isRunning = false;
     }
 
 }

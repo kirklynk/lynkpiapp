@@ -1,3 +1,4 @@
+using lynkpiapp;
 using lynkpiapp.Components;
 using MudBlazor.Services;
 
@@ -8,6 +9,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddMudServices();
+builder.Services.AddSingleton<HardwareService>();
 
 var app = builder.Build();
 
@@ -27,4 +29,12 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
+InitHardwareService(app.Services.CreateScope());
+
 app.Run();
+
+void InitHardwareService(IServiceScope scope)
+{
+    _ = scope.ServiceProvider.GetRequiredService<HardwareService>();
+
+}
