@@ -1,7 +1,54 @@
 ﻿@page "/"
+@implements IDisposable;
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<MudGrid>
+    <MudItem>
+        <MudStack>
+            <MudButton Variant="Variant.Filled" OnClick="ButtonClicked">
+                ARM AWAY
+            </MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="ButtonClicked">
+                ARM HOME
+            </MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="ButtonClicked">
+                DISARM
+            </MudButton>
+        </MudStack>
+    </MudItem>
+    <MudItem>
+        @Clock.ToString("hh:mm:ss tt")
+    </MudItem>
+</MudGrid>
+@code {
 
-Welcome to your new app.
+    public DateTime Clock { get; set; }
+
+    private bool _isRunning = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _ = Task.Factory.StartNew(() =>
+         {
+             while (_isRunning)
+             {
+                 Clock = DateTime.Now;
+                 InvokeAsync(StateHasChanged);
+                 Thread.Sleep(1000);
+             }
+         }, TaskCreationOptions.LongRunning);
+    }
+
+    void ButtonClicked(MouseEventArgs args)
+    {
+        Console.WriteLine($"Button clicked at {DateTime.Now}");
+    }
+
+    public void Dispose()
+    {
+        _isRunning = false;
+    }
+
+}

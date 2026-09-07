@@ -7,4 +7,12 @@
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="AlarmService.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MudBlazor" Version="9.9.0" />
+  </ItemGroup>
+
 </Project>

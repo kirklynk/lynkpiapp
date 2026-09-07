@@ -1,9 +1,28 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudText Typo="Typo.h5" Class="ml-3">Lynk Alarm System</MudText>
+       
+    </MudAppBar>
+    <MudMainContent Style="margin: 0.4rem;">
+        @Body
+        <div id="blazor-error-ui" data-nosnippet>
+            An unhandled error has occurred.
+            <a href="." class="reload">Reload</a>
+            <span class="dismiss">🗙</span>
+        </div>
+    </MudMainContent>
+</MudLayout>
+
+
+@* Required *@
+<MudThemeProvider />
+<MudPopoverProvider />
+
+@* Needed for dialogs *@
+<MudDialogProvider />
+
+@* Needed for snackbars *@
+<MudSnackbarProvider />
