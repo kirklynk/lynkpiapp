@@ -7,13 +7,13 @@
 <MudGrid>
     <MudItem>
         <MudStack>
-            <MudButton Variant="Variant.Filled" OnClick="ButtonClicked">
+            <MudButton Variant="Variant.Filled" OnClick="(() => HardwareService.SetAlarm(AlarmState.ArmedAway))">
                 ARM AWAY
             </MudButton>
-            <MudButton Variant="Variant.Filled" OnClick="ButtonClicked">
+            <MudButton Variant="Variant.Filled" OnClick="(() => HardwareService.SetAlarm(AlarmState.ArmedHome))">
                 ARM HOME
             </MudButton>
-            <MudButton Variant="Variant.Filled" OnClick="ButtonClicked">
+            <MudButton Variant="Variant.Filled" OnClick="(() => HardwareService.SetAlarm(AlarmState.Disarm))">
                 DISARM
             </MudButton>
         </MudStack>

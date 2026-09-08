@@ -1,21 +1,20 @@
-﻿using System.ComponentModel;
-using System.Device.Gpio;
-using System.Runtime.CompilerServices;
+﻿using System.Device.Gpio;
 
 namespace lynkpiapp
 {
-    public class HardwareService : INotifyPropertyChanged, IDisposable
+    public class HardwareService : NotifyBase, IDisposable
     {
         bool _disposed;
+        private readonly List<TriggerInput> _triggers;
         private readonly GpioController _controller;
-        private readonly GpioPin _pin;
+        private readonly List<GpioPin> _pins;
         private readonly ILogger<HardwareService> _logger;
 
         public DateTime Clock
         {
             get => field; set
             {
-                OnPropertyChanged(ref field, value);
+                NotifyPropertyChanged(ref field, value);
             }
         }
 
@@ -23,24 +22,31 @@ namespace lynkpiapp
         {
             get => field; protected set
             {
-                OnPropertyChanged(ref field, value);
+                NotifyPropertyChanged(ref field, value);
             }
         } = false;
 
-        public HardwareService(ILogger<HardwareService> logger)
+        public AlarmState AlarmState { get => field; private set => NotifyPropertyChanged(ref field, value); } = AlarmState.ArmedHome;
+
+        public HardwareService(ILogger<HardwareService> logger, IConfiguration configuration)
         {
             _logger = logger;
 
             try
             {
                 SetupClock();
+                _triggers = configuration.GetSection("TriggerInputs").Get<List<TriggerInput>>() ?? new List<TriggerInput>();
+                _pins = new List<GpioPin>();
 
                 _controller = new GpioController();
-                _pin = _controller.OpenPin(4, PinMode.InputPullDown);
-                
-                IsTriggered = _pin.Read() == PinValue.Low;
 
-                _pin.ValueChanged += Pin_ValueChanged;  
+                foreach (var trigger in _triggers)
+                {
+                    var pin = _controller.OpenPin(trigger.PinNumber, PinMode.InputPullDown);
+                    pin.ValueChanged += Pin_ValueChanged;
+                    _pins.Add(pin);
+                }
+
                 _logger.LogInformation("GPIO controller initialized successfully.");
 
             }
@@ -53,6 +59,8 @@ namespace lynkpiapp
         private void Pin_ValueChanged(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
         {
             IsTriggered = pinValueChangedEventArgs.ChangeType == PinEventTypes.Falling;
+            var triggerInput = _triggers.FirstOrDefault(t => t.PinNumber == pinValueChangedEventArgs.PinNumber);
+            triggerInput?.IsTriggered = IsTriggered;
             _logger.LogInformation("Pin value changed: {ChangeType}, IsTriggered: {IsTriggered}", pinValueChangedEventArgs.ChangeType, IsTriggered);
         }
 
@@ -68,7 +76,11 @@ namespace lynkpiapp
             }, TaskCreationOptions.LongRunning);
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+        public bool SetAlarm(AlarmState alarmState)
+        {
+            AlarmState = alarmState;
+            return true;
+        }
 
         public void Dispose()
         {
@@ -76,14 +88,12 @@ namespace lynkpiapp
             _disposed = true;
 
         }
+    }
 
-        void OnPropertyChanged<T>(ref T field, T value, [CallerMemberName] string propertyName = "")
-        {
-            if (!EqualityComparer<T>.Default.Equals(field, value))
-            {
-                field = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
+    public enum AlarmState
+    {
+        ArmedHome,
+        ArmedAway,
+        Disarm,
     }
 }
