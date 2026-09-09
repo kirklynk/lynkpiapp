@@ -1,6 +1,6 @@
 ﻿namespace lynkpiapp
 {
-    public sealed class TriggerInput : NotifyBase
+    public sealed class Sensor : NotifyBase
     {
 
         public bool IsTriggered
@@ -20,5 +20,12 @@
             get => field;
             set => NotifyPropertyChanged(ref field, value);
         }
+
+        public bool IsPeripheral
+        {
+            get => field;
+            set => NotifyPropertyChanged(ref field, value);
+        }
+
     }
 }

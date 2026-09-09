@@ -1,44 +1,99 @@
 ﻿@page "/"
 
-@inject HardwareService HardwareService
+@inject HardwareService _hardwareService
+@inject ISnackbar _snackbar
 
 <PageTitle>Home</PageTitle>
-
-<MudGrid>
-    <MudItem>
-        <MudStack>
-            <MudButton Variant="Variant.Filled" OnClick="(() => HardwareService.SetAlarm(AlarmState.ArmedAway))">
-                ARM AWAY
-            </MudButton>
-            <MudButton Variant="Variant.Filled" OnClick="(() => HardwareService.SetAlarm(AlarmState.ArmedHome))">
-                ARM HOME
-            </MudButton>
-            <MudButton Variant="Variant.Filled" OnClick="(() => HardwareService.SetAlarm(AlarmState.Disarm))">
-                DISARM
-            </MudButton>
-        </MudStack>
-    </MudItem>
-    <MudItem>
-        @HardwareService.Clock.ToString("hh:mm:ss tt")
-
-<p>@HardwareService.IsTriggered</p>
-    </MudItem>
-</MudGrid>
+<div style="height: 100%; display: flex; flex-direction: column; justify-content: center;">
+    <MudGrid Style="padding: 1rem;">
+        <MudItem lg="3" md="3" sm="4" xs="4">
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
+                <MudButton Variant="Variant.Filled" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.ArmedAway))" Disabled="@Disabled" Class="button-fullwidth">
+                    ARM AWAY
+                </MudButton>
+                <MudButton Variant="Variant.Filled" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.ArmedHome))" Disabled="@Disabled" Class="button-fullwidth">
+                    ARM HOME
+                </MudButton>
+                <MudButton Variant="Variant.Filled" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.Disarm))" Class="button-fullwidth">
+                    DISARM
+                </MudButton>
+            </MudStack>
+        </MudItem>
+        <MudItem lg="9" md="9" sm="8" xs="8">
+            <MudStack AlignItems="AlignItems.Center">
+                <text style="font-size: 2.5rem; text-transform: uppercase">
+                    @_hardwareService.Clock.ToString("h:mm:ss tt")
+                </text>
+                <p style="font-size: 2rem;">@State</p>    
+                <ul style="align-content: start">
+                    @foreach (var item in _hardwareService.Tripped)
+                    {
+                        <li>@item.desc</li>
+                        
+                    }
+                </ul>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+</div>
 @code {
+
+    bool Disabled => _hardwareService.AlarmState == AlarmState.ArmedAway || _hardwareService.AlarmState == AlarmState.ArmedHome;
+    
+    string State
+    {
+        get
+        {
+            switch (_hardwareService.AlarmState)
+            {
+                case AlarmState.ArmedAway:
+                    return "Armed Away";
+                case AlarmState.ArmedHome:
+                    return "Armed Home";
+                case AlarmState.Disarm:
+                    return "Disarmed";
+                default:
+                    return "Unknown";
+            }
+        }
+    }
 
     protected override void OnInitialized()
     {
-        HardwareService.PropertyChanged += (sender, args) =>
+        _hardwareService.PropertyChanged += (sender, args) =>
         {
             InvokeAsync(StateHasChanged);
-
         };
         base.OnInitialized();
     }
 
-    void ButtonClicked(MouseEventArgs args)
+    async Task ArmDisarmAlarmAsync(AlarmState args)
     {
-        Console.WriteLine($"Button clicked at {DateTime.Now}");
+        var options = new DialogOptions { CloseOnEscapeKey = true, BackdropClick = false, CloseOnNavigation = true, NoHeader = true };
+        var dialog = await DialogService.ShowAsync<KeypadDialog>("Enter Code", options);
+        var result = await dialog.Result;
+        if (!result?.Canceled == true)
+        {
+            var code = result.Data as string;
+            if (code != null)
+            {
+                var (valid, user) = _hardwareService.SetAlarm(args, code);
+                if (valid)
+                {
+                    _snackbar.Add($"Action was successful. User: {user}", Severity.Success);
+                }
+                else
+                {
+                    _snackbar.Add("Action failed.", Severity.Error);
+                }
+            }
+        }
     }
-
 }
+
+<style>
+    .button-fullwidth {
+        height: 5rem;
+        width: 100%;
+    }
+</style>

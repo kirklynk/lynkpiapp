@@ -12,6 +12,7 @@ namespace lynkpiapp
             {
                 field = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+
             }
         }
 

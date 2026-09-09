@@ -1,0 +1,73 @@
+﻿@using System.ComponentModel.DataAnnotations
+
+<EditForm Model="@Model" OnValidSubmit="HandleValidSubmit" @ref="_form">
+    <DataAnnotationsValidator />
+
+    <MudStack Row="false" Style="margin: 1rem;">
+        <MudStack Row="true">
+            <MudTextField @bind-Value="Model.Code" Placeholder="Enter Alarm Code" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" Class="mb-2" For="(() => Model.Code)" Clearable="true" InputType="InputType.Password" InputMode="InputMode.numeric" />
+        </MudStack>
+        <MudGrid Spacing="2">
+
+            @for (int i = 1; i < 10; i++)
+            {
+                var idx = i;
+                <MudItem xs="4" lg="4" md="4" sm="4">
+                    <MudButton Variant="Variant.Filled" Color="Color.Default" Class="keypad-button" OnClick="() => OnNumberPress(idx)">@idx</MudButton>
+                </MudItem>
+            }
+            <MudItem xs="4" lg="4" md="4" sm="4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="keypad-button keypad-button-0" OnClick="() => DialogReference?.CancelAll()">Cancel</MudButton>
+            </MudItem>
+            <MudItem xs="4" lg="4" md="4" sm="4">
+                <MudButton Variant="Variant.Filled" Color="Color.Default" Class="keypad-button" OnClick="() => OnNumberPress(0)">0</MudButton>
+            </MudItem>
+            <MudItem xs="4" lg="4" md="4" sm="4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="keypad-button keypad-button-0" ButtonType="ButtonType.Submit">Accept</MudButton>
+            </MudItem>
+        </MudGrid>
+
+    </MudStack>
+</EditForm>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance? DialogReference { get; set; }
+
+    public KeypadDialogModel Model { get; set; } = new KeypadDialogModel();
+
+    EditForm _form;
+
+    void OnNumberPress(int e)
+    {
+        Model.Code += e.ToString();
+        _form.EditContext?.Validate();
+    }
+
+    void HandleValidSubmit()
+    {
+        DialogReference?.Close(DialogResult.Ok(Model.Code));
+    }
+
+    public class KeypadDialogModel
+    {
+        [Required, StringLength(6, MinimumLength = 4, ErrorMessage = "Code must be between 4 and 6 characters long.")]
+        public string? Code { get; set; }
+    }
+
+}
+
+
+<style>
+    .keypad-button {
+        width: 100%;
+        height: 3.5rem;
+        font-size: 2rem;
+        font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
+    }
+
+    .keypad-button-0 {
+        font-size: 1rem;
+    }
+</style>

@@ -8,9 +8,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddMudServices();
-builder.Services.AddSingleton<HardwareService>();
+builder.Services.AddMudServices(config =>
+{
+    config.SnackbarConfiguration.PositionClass = MudBlazor.Defaults.Classes.Position.BottomCenter;
+    config.SnackbarConfiguration.PreventDuplicates = true;
+    config.SnackbarConfiguration.VisibleStateDuration = 1000;
+});
 
+builder.Services.AddSingleton<HardwareService>();
+builder.Services.Configure<List<User>>(builder.Configuration.GetSection("Users"));
+builder.Services.Configure<List<Sensor>>(builder.Configuration.GetSection("Sensors"));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
