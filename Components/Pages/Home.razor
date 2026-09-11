@@ -1,10 +1,11 @@
 ﻿@page "/"
-
 @inject HardwareService _hardwareService
 @inject ISnackbar _snackbar
+@inject ILogger<Home> _logger
 
 <PageTitle>Home</PageTitle>
 <div style="height: 100%; display: flex; flex-direction: column; justify-content: center;">
+
     <MudGrid Style="padding: 1rem;">
         <MudItem lg="3" md="3" sm="4" xs="4">
             <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
@@ -14,32 +15,51 @@
                 <MudButton Variant="Variant.Filled" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.ArmedHome))" Disabled="@Disabled" Class="button-fullwidth">
                     ARM HOME
                 </MudButton>
-                <MudButton Variant="Variant.Filled" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.Disarm))" Class="button-fullwidth">
+                <MudButton Variant="Variant.Filled" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.Disarm))" Class="button-fullwidth" Color="Color.Success">
                     DISARM
                 </MudButton>
             </MudStack>
         </MudItem>
         <MudItem lg="9" md="9" sm="8" xs="8">
             <MudStack AlignItems="AlignItems.Center">
-                <text style="font-size: 2.5rem; text-transform: uppercase">
-                    @_hardwareService.Clock.ToString("h:mm:ss tt")
-                </text>
-                <p style="font-size: 2rem;">@State</p>    
-                <ul style="align-content: start">
-                    @foreach (var item in _hardwareService.Tripped)
-                    {
-                        <li>@item.desc</li>
-                        
-                    }
-                </ul>
+                <div>
+                    <text style="font-size: 2rem; text-transform: uppercase">
+                        @_hardwareService.Clock.ToString("h:mm:ss tt")
+                    </text>
+                </div>
+                <div style="font-size: 1rem; text-transform: uppercase; text-align: center;">System <br /> @State</div>
+
+                <p>
+                    <i width="24px">
+                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="100px" height="100px" viewBox="0 0 256 256" xml:space="preserve" class="shield-icon @(_hardwareService.AlarmState == AlarmState.Disarm ? "shield-green" : "shield-red")">
+                            <g style="stroke: none; stroke-width: 0; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: none; fill-rule: nonzero; opacity: 1; color: green;" transform="translate(1.4065934065934016 1.4065934065934016) scale(2.81 2.81)">
+                                <path d="M 45 89.998 c -0.959 0 -1.918 -0.151 -2.831 -0.455 C 22.605 83.045 9.963 67.486 9.963 49.905 V 18.856 c 0 -3.162 2.252 -5.866 5.354 -6.43 l 0 0 c 9.925 -1.806 18.571 -5.528 25.698 -11.063 c 2.348 -1.823 5.623 -1.822 7.968 0 c 7.128 5.535 15.774 9.257 25.699 11.063 c 3.102 0.564 5.354 3.268 5.354 6.43 v 31.049 c 0 17.581 -12.642 33.14 -32.206 39.638 C 46.918 89.847 45.959 89.998 45 89.998 z M 45 6 c -0.108 0 -0.216 0.034 -0.304 0.103 C 36.799 12.236 27.276 16.35 16.392 18.33 c 0 0 0 0 -0.001 0 c -0.248 0.045 -0.428 0.267 -0.428 0.526 v 31.049 c 0 14.951 11.029 28.274 28.098 33.944 c 0.606 0.201 1.273 0.201 1.878 0 c 17.069 -5.669 28.097 -18.993 28.097 -33.944 V 18.856 c 0 -0.26 -0.18 -0.481 -0.427 -0.526 c -10.885 -1.98 -20.408 -6.094 -28.306 -12.227 C 45.215 6.035 45.108 6 45 6 z M 15.855 15.378 h 0.01 H 15.855 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+                                <path d="M 46.221 75.502 c -1.258 0 -2.43 -0.797 -2.848 -2.057 c -0.521 -1.572 0.331 -3.271 1.903 -3.792 c 1.467 -0.486 2.894 -1.079 4.238 -1.76 c 8.292 -4.196 13.241 -11.385 13.241 -19.229 c 0 -1.657 1.343 -3 3 -3 s 3 1.343 3 3 c 0 10.153 -6.18 19.343 -16.531 24.581 c -1.607 0.814 -3.311 1.522 -5.06 2.103 C 46.852 75.452 46.533 75.502 46.221 75.502 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10;  fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+                                <path d="M 24.244 38.637 c -1.657 0 -3 -1.343 -3 -3 v -7.087 c 0 -2.559 1.824 -4.748 4.336 -5.205 c 3.921 -0.713 7.537 -1.898 10.745 -3.52 c 1.478 -0.747 3.283 -0.155 4.031 1.324 c 0.748 1.479 0.155 3.283 -1.324 4.031 c -3.56 1.8 -7.523 3.13 -11.789 3.958 v 6.5 C 27.244 37.293 25.901 38.637 24.244 38.637 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10;  fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+                                <path d="M 65.756 41.504 c -1.657 0 -3 -1.343 -3 -3 V 27.41 c 0 -1.657 1.343 -3 3 -3 s 3 1.343 3 3 v 11.095 C 68.756 40.161 67.413 41.504 65.756 41.504 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10;  fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+                                <path d="M 24.244 52.006 c -1.657 0 -3 -1.343 -3 -3 v -4.35 c 0 -1.657 1.343 -3 3 -3 s 3 1.343 3 3 v 4.35 C 27.244 50.663 25.901 52.006 24.244 52.006 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
+                            </g>
+                        </svg>
+                    </i>
+                </p>
+                @if (_hardwareService.IsTriggered)
+                {
+                    <div>
+                        <MudButton Variant="Variant.Outlined" OnClick="@(async () => await DialogService.ShowAsync<TriggeredSensorsDialog>("TRIGGERED SENSORS", new DialogOptions { FullWidth = true }))">VIEW TRIPPED SENSORS</MudButton>
+                    </div>
+                }
             </MudStack>
         </MudItem>
     </MudGrid>
+    @if (_hardwareService.IsTriggered)
+    {
+        <p style="text-align: center;"><MudText Color="Color.Error" Typo="Typo.h5">Alarm Triggered</MudText></p>
+    }
 </div>
 @code {
 
     bool Disabled => _hardwareService.AlarmState == AlarmState.ArmedAway || _hardwareService.AlarmState == AlarmState.ArmedHome;
-    
+
     string State
     {
         get
@@ -69,31 +89,53 @@
 
     async Task ArmDisarmAlarmAsync(AlarmState args)
     {
-        var options = new DialogOptions { CloseOnEscapeKey = true, BackdropClick = false, CloseOnNavigation = true, NoHeader = true };
-        var dialog = await DialogService.ShowAsync<KeypadDialog>("Enter Code", options);
+        var options = new DialogOptions { CloseOnEscapeKey = true, BackdropClick = false, CloseOnNavigation = true, NoHeader = true, FullWidth = true };
+        if (args != AlarmState.Disarm)
+        {
+            var r = _hardwareService.CheckSensors();
+            if (r.Count > 0)
+            {
+                var list = new List<(string description, bool isPeripheral, bool state)>();
+                switch (args)
+                {
+                    case AlarmState.ArmedAway:
+                        list.AddRange(r.Where(x => !x.state));
+                        break;
+                    case AlarmState.ArmedHome:
+                        list.AddRange(r.Where(x => x.isPeripheral && !x.state));
+                        break;
+                    default:
+                        return;
+                }
+
+                if (list.Count > 0)
+                {
+                    var sensorDialog = await DialogService.ShowAsync<CheckSensorsDialog>("Open Sensors", new DialogParameters<CheckSensorsDialog>() { { x => x.OpenSensors, list.Select(x => x.description).ToList<string>() } }, options);
+                    var sensorDialogResult = await sensorDialog.Result;
+                    if (sensorDialogResult!.Canceled)
+                    {
+                        _logger.LogInformation("Canceled");
+                        return;
+                    }
+                }
+            }
+        }
+
+       
+        var dialog = await DialogService.ShowAsync<KeypadDialog>("Enter Code", new DialogParameters<KeypadDialog>() { { x => x.State, args } }, options);
         var result = await dialog.Result;
         if (!result?.Canceled == true)
         {
-            var code = result.Data as string;
-            if (code != null)
+            var success = (bool?)result?.Data;
+
+            if (success.GetValueOrDefault(false))
             {
-                var (valid, user) = _hardwareService.SetAlarm(args, code);
-                if (valid)
-                {
-                    _snackbar.Add($"Action was successful. User: {user}", Severity.Success);
-                }
+                if (args == AlarmState.Disarm)
+                    _snackbar.Add("System disarmed");
                 else
-                {
-                    _snackbar.Add("Action failed.", Severity.Error);
-                }
+                    _snackbar.Add("System armed", severity: Severity.Error);
             }
         }
     }
 }
 
-<style>
-    .button-fullwidth {
-        height: 5rem;
-        width: 100%;
-    }
-</style>

@@ -8,7 +8,7 @@ namespace lynkpiapp
     public class HardwareService : NotifyBase, IDisposable
     {
         bool _disposed;
-        private readonly List<Sensor>? _triggers;
+        private readonly List<Sensor>? _sensors;
         private readonly List<User>? _users;
         private readonly GpioController? _controller;
         private readonly List<GpioPin>? _pins;
@@ -32,17 +32,17 @@ namespace lynkpiapp
             {
                 ConfigureClockMonitoringService();
 
-                _triggers = sensors?.Value ?? [];
+                _sensors = sensors?.Value ?? [];
                 _users = users?.Value ?? [];
                 _pins = [];
 
                 _controller = new GpioController();
 
-                foreach (var trigger in _triggers)
+                foreach (var trigger in _sensors)
                 {
                     var pin = _controller.OpenPin(trigger.PinNumber, PinMode.InputPullDown);
                     pin.ValueChanged += Pin_ValueChanged;
-
+                    trigger.IsTriggered = pin.Read() == PinValue.Low;
                     _pins.Add(pin);
                 }
 
@@ -57,7 +57,7 @@ namespace lynkpiapp
         {
 
             var tripped = pinValueChangedEventArgs.ChangeType == PinEventTypes.Falling;
-            var sensor = _triggers.FirstOrDefault(t => t.PinNumber == pinValueChangedEventArgs.PinNumber);
+            var sensor = _sensors.FirstOrDefault(t => t.PinNumber == pinValueChangedEventArgs.PinNumber);
             sensor?.IsTriggered = tripped;
 
             if (sensor == null || AlarmState == AlarmState.Disarm || (AlarmState == AlarmState.ArmedHome && !sensor.IsPeripheral))
@@ -80,7 +80,6 @@ namespace lynkpiapp
             }
 
             IsTriggered = true;
-
         }
 
         private void ConfigureClockMonitoringService()
@@ -106,12 +105,24 @@ namespace lynkpiapp
                     Thread.Sleep(500);
                 }
             }, TaskCreationOptions.LongRunning);
-
-
         }
 
+        public List<(string description, bool isPeripheral, bool state)> CheckSensors()
+        {
+            var opened = new List<(string description, bool isPeripheral, bool state)>();
+            foreach (var item in _sensors ?? [])
+            {
+                var pin = _pins?.FirstOrDefault(x => x.PinNumber == item.PinNumber);
+                if (pin != null)
+                {
+                    opened.Add((item.Description, item.IsPeripheral, pin.Read() == PinValue.High));
+                }
+            }
+            return opened;
+        }
         public (bool isValid, string? user) SetAlarm(AlarmState alarmState, string code)
         {
+
             var (isValid, user) = ValidateCode(code);
             if (!isValid)
             {

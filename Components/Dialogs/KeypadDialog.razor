@@ -1,11 +1,13 @@
 ﻿@using System.ComponentModel.DataAnnotations
+@inject HardwareService _hardwareService
+@inject ISnackbar _snackbar
 
 <EditForm Model="@Model" OnValidSubmit="HandleValidSubmit" @ref="_form">
     <DataAnnotationsValidator />
 
     <MudStack Row="false" Style="margin: 1rem;">
         <MudStack Row="true">
-            <MudTextField @bind-Value="Model.Code" Placeholder="Enter Alarm Code" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" Class="mb-2" For="(() => Model.Code)" Clearable="true" InputType="InputType.Password" InputMode="InputMode.numeric" />
+            <MudTextField @bind-Value="Model.Code" Placeholder="Enter Alarm Code" Variant="Variant.Outlined" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Lock" For="(() => Model.Code)" Clearable="true" InputType="InputType.Password" InputMode="InputMode.numeric" Margin="Margin.Dense" />
         </MudStack>
         <MudGrid Spacing="2">
 
@@ -17,13 +19,27 @@
                 </MudItem>
             }
             <MudItem xs="4" lg="4" md="4" sm="4">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="keypad-button keypad-button-0" OnClick="() => DialogReference?.CancelAll()">Cancel</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Default" Class="keypad-button keypad-button-0" OnClick="(() => Model.Code = string.Empty)">
+                    Clear
+                </MudButton>
             </MudItem>
             <MudItem xs="4" lg="4" md="4" sm="4">
                 <MudButton Variant="Variant.Filled" Color="Color.Default" Class="keypad-button" OnClick="() => OnNumberPress(0)">0</MudButton>
             </MudItem>
             <MudItem xs="4" lg="4" md="4" sm="4">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="keypad-button keypad-button-0" ButtonType="ButtonType.Submit">Accept</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Default" Class="keypad-button keypad-button-0" OnClick="ClearCode">
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowBackIos" />
+                </MudButton>
+            </MudItem>
+
+            <MudItem xs="4" lg="4" md="4" sm="4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="keypad-button-0" OnClick="() => DialogReference?.CancelAll()">Cancel</MudButton>
+            </MudItem>
+            <MudItem xs="4" lg="4" md="4" sm="4">
+
+            </MudItem>
+            <MudItem xs="4" lg="4" md="4" sm="4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="keypad-button-0" ButtonType="ButtonType.Submit">Accept</MudButton>
             </MudItem>
         </MudGrid>
 
@@ -35,7 +51,10 @@
     [CascadingParameter]
     private IMudDialogInstance? DialogReference { get; set; }
 
-    public KeypadDialogModel Model { get; set; } = new KeypadDialogModel();
+    [Parameter]
+    public AlarmState? State { get; set; }
+
+    private KeypadDialogModel Model { get; set; } = new KeypadDialogModel();
 
     EditForm _form;
 
@@ -45,9 +64,26 @@
         _form.EditContext?.Validate();
     }
 
+    void ClearCode(MouseEventArgs args)
+    {
+        if (!string.IsNullOrWhiteSpace(Model.Code))
+        {
+            Model.Code = Model.Code.Remove(Model.Code.Length - 1);
+        }
+    }
+
     void HandleValidSubmit()
     {
-        DialogReference?.Close(DialogResult.Ok(Model.Code));
+        if (State != null)
+        {
+            var (valid, user) = _hardwareService.SetAlarm((AlarmState)State, Model.Code);
+            if (valid)
+                DialogReference?.Close(DialogResult.Ok(valid));
+            else
+            {
+                _snackbar.Add("Invalid code", Severity.Error);
+            }
+        }
     }
 
     public class KeypadDialogModel
@@ -62,12 +98,13 @@
 <style>
     .keypad-button {
         width: 100%;
-        height: 3.5rem;
+        height: 2.9rem;
         font-size: 2rem;
         font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
     }
 
     .keypad-button-0 {
         font-size: 1rem;
+        width: 100%;
     }
 </style>

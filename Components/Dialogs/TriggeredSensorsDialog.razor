@@ -1,0 +1,20 @@
+﻿@inject HardwareService _hardwareService
+<div style="margin: 1rem;">
+    <MudDataGrid T="(string desc, int pin, bool tripped)" Items="_hardwareService.Tripped" SortMode="SortMode.None">
+        <Columns>
+            <PropertyColumn Property="x => x.desc" Title="Sensor" />
+        </Columns>
+
+    </MudDataGrid>
+    <p style="text-align: center; margin-top: 1rem;">
+
+        <MudButton Variant="Variant.Filled" OnClick="@(() => DialogReference?.CancelAll())">CANCEL</MudButton>
+
+    </p>
+</div>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance? DialogReference { get; set; }
+}

@@ -2,21 +2,22 @@
 @inject HardwareService _hardwareService
 
 <MudLayout>
-    <MudAppBar Elevation="1" Color="@Color" Gutters="true">
-       
+    <MudAppBar Elevation="1" Gutters="true" Color="@Color">
+
         <MudSpacer />
         <MudText Class="ml-3">@_hardwareService.Clock.ToLongDateString()</MudText>
         <MudSpacer />
         <MudSwitch T="bool" @bind-Value="@IsDarkMode" Label="Dark Mode" />
     </MudAppBar>
     <MudMainContent>
-        @Body
-        <div id="blazor-error-ui" data-nosnippet>
-            An unhandled error has occurred.
-            <a href="." class="reload">Reload</a>
-            <span class="dismiss">🗙</span>
+        <div class="@(_hardwareService.IsTriggered ? "animated-border animated-background" : "border")">
+            @Body
+            <div id="blazor-error-ui" data-nosnippet>
+                An unhandled error has occurred.
+                <a href="." class="reload">Reload</a>
+                <span class="dismiss">🗙</span>
+            </div>
         </div>
-       
     </MudMainContent>
 </MudLayout>
 
@@ -28,21 +29,7 @@
 
 @code {
 
-    public Color Color
-    {
-        get
-        {
-            return _hardwareService.AlarmState switch
-            {
-                AlarmState.ArmedAway => Color.Error,
-                AlarmState.ArmedHome => Color.Warning,
-                AlarmState.Disarm => Color.Success,
-                _ => Color.Default
-            };
-        }
-    }
-
-    public bool IsDarkMode { get; set; } = false;
+    public bool IsDarkMode { get; set; } = true;
     protected override void OnInitialized()
     {
         base.OnInitialized();
@@ -51,5 +38,7 @@
             InvokeAsync(StateHasChanged);
         };
     }
+
+    Color Color => _hardwareService.AlarmState != AlarmState.Disarm ? Color.Error : Color.Default;
 
 }
