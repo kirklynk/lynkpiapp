@@ -1,5 +1,5 @@
 ﻿@using System.ComponentModel.DataAnnotations
-@inject HardwareService _hardwareService
+
 @inject ISnackbar _snackbar
 
 <EditForm Model="@Model" OnValidSubmit="HandleValidSubmit" @ref="_form">
@@ -51,9 +51,6 @@
     [CascadingParameter]
     private IMudDialogInstance? DialogReference { get; set; }
 
-    [Parameter]
-    public AlarmState? State { get; set; }
-
     private KeypadDialogModel Model { get; set; } = new KeypadDialogModel();
 
     EditForm _form;
@@ -74,16 +71,7 @@
 
     void HandleValidSubmit()
     {
-        if (State != null)
-        {
-            var (valid, user) = _hardwareService.SetAlarm((AlarmState)State, Model.Code);
-            if (valid)
-                DialogReference?.Close(DialogResult.Ok(valid));
-            else
-            {
-                _snackbar.Add("Invalid code", Severity.Error);
-            }
-        }
+        DialogReference?.Close(DialogResult.Ok(Model.Code));
     }
 
     public class KeypadDialogModel
@@ -98,8 +86,8 @@
 <style>
     .keypad-button {
         width: 100%;
-        height: 2.9rem;
-        font-size: 2rem;
+        height: 2.5rem;
+        font-size: 1.5rem;
         font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif
     }
 

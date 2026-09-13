@@ -1,17 +1,22 @@
-﻿<h5>Open sensors</h5>
-<div style="margin: 1rem;">
+﻿
+<p style="margin: 0 1rem 1rem 1rem">
     <MudDataGrid T="string" Items="OpenSensors" SortMode="SortMode.None">
         <Columns>
             <PropertyColumn Property="x => x" Title="" />
         </Columns>
-
     </MudDataGrid>
-    <p style="text-align: center; margin-top: 1rem;">
+    <div style="text-align: center; margin-top: 1rem;">
+        <MudStack Justify="Justify.SpaceBetween" Row="true">
+            @if (ShowBypassButton)
+            {
+                <MudButton Variant="Variant.Filled" OnClick="@(() => Dialog?.Close(DialogResult.Ok(true)))">BYPASS</MudButton>
+            }
 
-        <MudButton Variant="Variant.Filled" OnClick="@(() => Dialog?.CancelAll())">CLOSE</MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="@(() => Dialog?.CancelAll())">CANCEL</MudButton>
 
-    </p>
-</div>
+        </MudStack>
+    </div>
+</p>
 
 @code {
 
@@ -19,5 +24,8 @@
     public IMudDialogInstance Dialog { get; set; }
 
     [Parameter]
-    public List<string> OpenSensors { get; set; }
+    public List<string> OpenSensors { get; set; } = [];
+
+    [Parameter]
+    public bool ShowBypassButton { get; set; } = false;
 }

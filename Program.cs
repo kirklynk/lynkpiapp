@@ -12,7 +12,8 @@ builder.Services.AddMudServices(config =>
 {
     config.SnackbarConfiguration.PositionClass = MudBlazor.Defaults.Classes.Position.BottomCenter;
     config.SnackbarConfiguration.PreventDuplicates = true;
-    config.SnackbarConfiguration.VisibleStateDuration = 1000;
+    config.SnackbarConfiguration.VisibleStateDuration = 2000;
+    config.SnackbarConfiguration.HideTransitionDuration = 100;
 });
 
 builder.Services.AddSingleton<HardwareService>();

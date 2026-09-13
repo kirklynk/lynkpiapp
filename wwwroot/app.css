@@ -72,8 +72,8 @@ html, body, .mud-main-content {
     position: relative;
     background: #111; /* Background color inside the box */
     color: #fff;
-    padding: 20px;
-    border-radius: 8px;
+    padding: 0px;
+    border-radius: 0px;
     z-index: 1;
 }
 
@@ -85,9 +85,9 @@ html, body, .mud-main-content {
         left: -2px;
         right: -2px;
         bottom: -2px;
-        background: linear-gradient(45deg, #ff0055, #0000ff, #00ff66, #ff0055);
+        background: linear-gradient(90deg, #ff0055, #0000ff, rgb(128,0,0));
         background-size: 400% 400%;
-        border-radius: 10px; /* Match inner radius + border width */
+        border-radius: 0px; /* Match inner radius + border width */
         z-index: -1;
         animation: bg-rotate 4s linear infinite;
     }

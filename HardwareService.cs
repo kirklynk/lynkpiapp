@@ -13,15 +13,12 @@ namespace lynkpiapp
         private readonly GpioController? _controller;
         private readonly List<GpioPin>? _pins;
         private readonly ILogger<HardwareService> _logger;
-
-        public ObservableCollection<(string desc, int number, bool isTripped)> Tripped = new ObservableCollection<(string, int number, bool)>();
-
         ConcurrentStack<Sensor> _queue = new();
 
+        public ObservableCollection<(string desc, int number, bool isTripped)> Tripped { get; } = new ObservableCollection<(string, int number, bool)>();
+
         public DateTime Clock { get => field; private set => NotifyPropertyChanged(ref field, value); }
-
         public bool IsTriggered { get => field; private set => NotifyPropertyChanged(ref field, value); } = false;
-
         public AlarmState AlarmState { get => field; private set => NotifyPropertyChanged(ref field, value); } = AlarmState.ArmedHome;
 
         public HardwareService(ILogger<HardwareService> logger, IOptions<List<Sensor>> sensors, IOptions<List<User>> users)
@@ -44,7 +41,13 @@ namespace lynkpiapp
                     pin.ValueChanged += Pin_ValueChanged;
                     trigger.IsTriggered = pin.Read() == PinValue.Low;
                     _pins.Add(pin);
+                    if (trigger.IsTriggered)
+                    {
+                        Tripped.Add((trigger.Description, trigger.PinNumber, trigger.IsTriggered));
+                    }
                 }
+                IsTriggered = Tripped.Count > 0;
+                _logger.LogInformation("Found {0} tripped sensor", Tripped.Count);
 
             }
             catch (Exception ex)
@@ -53,59 +56,6 @@ namespace lynkpiapp
             }
         }
 
-        private void Pin_ValueChanged(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
-        {
-
-            var tripped = pinValueChangedEventArgs.ChangeType == PinEventTypes.Falling;
-            var sensor = _sensors.FirstOrDefault(t => t.PinNumber == pinValueChangedEventArgs.PinNumber);
-            sensor?.IsTriggered = tripped;
-
-            if (sensor == null || AlarmState == AlarmState.Disarm || (AlarmState == AlarmState.ArmedHome && !sensor.IsPeripheral))
-            {
-                _logger.LogWarning("Ignoring raise alarm.");
-                return;
-            }
-            _queue.Push(sensor);
-        }
-
-        private void RaiseAlarm(Sensor sensor)
-        {
-            if (!Tripped.Any(x => x.number == sensor.PinNumber))
-                Tripped.Add((sensor.Description, sensor.PinNumber, true));
-            _logger.LogWarning("Alarm triggered by sensor: {SensorDescription} at {Time}", sensor.Description, Clock);
-
-            if (IsTriggered)
-            {
-                return;
-            }
-
-            IsTriggered = true;
-        }
-
-        private void ConfigureClockMonitoringService()
-        {
-            _ = Task.Factory.StartNew(() =>
-            {
-                while (!_disposed)
-                {
-                    Clock = DateTime.Now;
-                    Thread.Sleep(1000);
-                }
-            }, TaskCreationOptions.LongRunning);
-
-            _ = Task.Factory.StartNew(() =>
-            {
-
-                while (!_disposed)
-                {
-                    if (_queue.TryPop(out var sensor))
-                    {
-                        RaiseAlarm(sensor);
-                    }
-                    Thread.Sleep(500);
-                }
-            }, TaskCreationOptions.LongRunning);
-        }
 
         public List<(string description, bool isPeripheral, bool state)> CheckSensors()
         {
@@ -120,10 +70,13 @@ namespace lynkpiapp
             }
             return opened;
         }
+
         public (bool isValid, string? user) SetAlarm(AlarmState alarmState, string code)
         {
+            _logger.LogInformation("Setting alarm state");
 
             var (isValid, user) = ValidateCode(code);
+
             if (!isValid)
             {
                 _logger.LogWarning("Failed to set alarm state due to invalid code.");
@@ -156,6 +109,67 @@ namespace lynkpiapp
             return (isValid != null, isValid?.Name);
         }
 
+        private void ConfigureClockMonitoringService()
+        {
+            _ = Task.Factory.StartNew(() =>
+            {
+                while (!_disposed)
+                {
+                    Clock = DateTime.Now;
+                    Thread.Sleep(1000);
+                }
+            }, TaskCreationOptions.LongRunning);
+
+            _ = Task.Factory.StartNew(() =>
+            {
+
+                while (!_disposed)
+                {
+                    if (_queue.TryPop(out var sensor))
+                    {
+                        RaiseAlarm(sensor);
+                    }
+                    Thread.Sleep(500);
+                }
+            }, TaskCreationOptions.LongRunning);
+        }
+        private void Pin_ValueChanged(object sender, PinValueChangedEventArgs pinValueChangedEventArgs)
+        {
+
+            var tripped = pinValueChangedEventArgs.ChangeType == PinEventTypes.Falling;
+            var sensor = _sensors.FirstOrDefault(t => t.PinNumber == pinValueChangedEventArgs.PinNumber);
+            sensor?.IsTriggered = tripped;
+
+            if (sensor == null || AlarmState == AlarmState.Disarm)
+            {
+                _logger.LogWarning("Ignoring raise alarm.");
+                return;
+            }
+            _queue.Push(sensor);
+        }
+
+        private void RaiseAlarm(Sensor sensor)
+        {
+            _logger.LogInformation("Checking whether to raised alarm");
+
+            //Ignoring peripheral sensors when in ArmHome mode
+            if (AlarmState == AlarmState.ArmedHome && !sensor.IsPeripheral)
+            {
+                return;
+            }
+
+            if (!Tripped.Any(x => x.number == sensor.PinNumber))
+                Tripped.Add((sensor.Description, sensor.PinNumber, true));
+
+            _logger.LogWarning("Alarm triggered by sensor: {SensorDescription} at {Time}", sensor.Description, Clock);
+
+            if (IsTriggered)
+            {
+                return;
+            }
+
+            IsTriggered = true;
+        }
         public void Dispose()
         {
             if (_disposed) return;

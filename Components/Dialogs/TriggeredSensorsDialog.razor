@@ -1,17 +1,26 @@
 ﻿@inject HardwareService _hardwareService
-<div style="margin: 1rem;">
-    <MudDataGrid T="(string desc, int pin, bool tripped)" Items="_hardwareService.Tripped" SortMode="SortMode.None">
-        <Columns>
-            <PropertyColumn Property="x => x.desc" Title="Sensor" />
-        </Columns>
 
-    </MudDataGrid>
-    <p style="text-align: center; margin-top: 1rem;">
+<p style="margin: 0 1rem 1rem 1rem">
+    <MudGrid>
+        <MudItem xs="12" lg="12" md="12" sm="12">
+            <MudDataGrid T="(string desc, int pin, bool tripped)" Items="_hardwareService.Tripped" SortMode="SortMode.None">
+                <Columns>
+                    <PropertyColumn Property="x => x.desc" Title="" />
+                </Columns>
+            </MudDataGrid>
+        </MudItem>
 
-        <MudButton Variant="Variant.Filled" OnClick="@(() => DialogReference?.CancelAll())">CANCEL</MudButton>
+        <MudItem xs="4" lg="4" md="4" sm="4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="keypad-button-0" Style="width: 100%;" OnClick="() => DialogReference?.CancelAll()">Cancel</MudButton>
+        </MudItem>
+        <MudItem xs="4" lg="4" md="4" sm="4">
 
-    </p>
-</div>
+        </MudItem>
+        <MudItem xs="4" lg="4" md="4" sm="4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="keypad-button-0" Style="width: 100%;" OnClick="() => DialogReference?.Close(DialogResult.Ok(AlarmState.Disarm))">Disarm</MudButton>
+        </MudItem>
+    </MudGrid>
+</p>
 
 @code {
 
