@@ -7,28 +7,28 @@
 <div style="height: 100%; display: flex; flex-direction: column; justify-content: center;">
 
     <MudGrid Style="padding: 1rem;">
-        <MudItem lg="3" md="3" sm="4" xs="4">
+        <MudItem lg="4" md="4" sm="4" xs="4">
             <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
-                <MudButton Variant="Variant.Filled" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.ArmedAway))" Disabled="@_disabled" Class="button-fullwidth" StartIcon="@Icons.Material.Filled.AirplaneTicket">
+                <MudButton Variant="Variant.Filled" DropShadow="true" Color="Color.Default" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.ArmedAway))" Disabled="@_disabled" Class="button-fullwidth" StartIcon="@Icons.Material.Filled.AirplaneTicket">
                     ARM AWAY
                 </MudButton>
-                <MudButton Variant="Variant.Filled" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.ArmedHome))" Disabled="@_disabled" Class="button-fullwidth" StartIcon="@Icons.Material.Filled.LocalPolice">
+                <MudButton Variant="Variant.Filled" DropShadow="true" Color="Color.Default" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.ArmedHome))" Disabled="@_disabled" Class="button-fullwidth" StartIcon="@Icons.Material.Filled.LocalPolice">
                     ARM HOME
                 </MudButton>
-                <MudButton Variant="Variant.Filled" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.Disarm))" Class="button-fullwidth" Color="Color.Success">
+                <MudButton Variant="Variant.Filled" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.Disarm))" Class="button-fullwidth" Color="Color.Primary">
                     DISARM
                 </MudButton>
             </MudStack>
         </MudItem>
-        <MudItem lg="9" md="9" sm="8" xs="8">
+        <MudItem lg="8" md="8" sm="8" xs="8">
             <MudStack AlignItems="AlignItems.Center">
                 <div>
-                    <text style="font-size: 1.7rem; text-transform: uppercase">
+                    <text style="font-size: 2rem; text-transform: uppercase">
                         @_hardwareService.Clock.ToString("h:mm:ss tt")
                     </text>
                 </div>
 
-                <div style="font-size: 1rem; text-transform: uppercase; text-align: center;">System <br /> @_alarmState</div>
+                <div style="font-size: 1.1rem; text-transform: uppercase; text-align: center;">@_alarmState</div>
 
                 <p>
                     <i width="24px">
@@ -46,9 +46,9 @@
 
                 @if (_hardwareService.IsTriggered)
                 {
-                    <p>
+                    <div>
                         <MudButton Variant="Variant.Outlined" OnClick="ShowTrippedSensorsAsync">VIEW TRIPPED SENSORS</MudButton>
-                    </p>
+                    </div>
                 }
             </MudStack>
         </MudItem>
@@ -174,7 +174,6 @@
 
     async Task ShowTrippedSensorsAsync()
     {
-        _logger.LogInformation("Sensor {0}", _hardwareService.Tripped);
         var dialogResult = await DialogService.ShowAsync<TriggeredSensorsDialog>("TRIGGERED SENSORS", new DialogOptions { FullWidth = true });
         var result = await dialogResult.Result;
         if (result!.Canceled == false && result.Data != null)

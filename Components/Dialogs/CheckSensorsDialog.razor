@@ -6,13 +6,13 @@
         </Columns>
     </MudDataGrid>
     <div style="text-align: center; margin-top: 1rem;">
-        <MudStack Justify="Justify.SpaceBetween" Row="true">
+        <MudStack Justify="Justify.SpaceBetween">
             @if (ShowBypassButton)
             {
-                <MudButton Variant="Variant.Filled" OnClick="@(() => Dialog?.Close(DialogResult.Ok(true)))">BYPASS</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => Dialog?.Close(DialogResult.Ok(true)))">BYPASS</MudButton>
             }
 
-            <MudButton Variant="Variant.Filled" OnClick="@(() => Dialog?.CancelAll())">CANCEL</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => Dialog?.CancelAll())">CANCEL</MudButton>
 
         </MudStack>
     </div>

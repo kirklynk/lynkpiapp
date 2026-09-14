@@ -19,7 +19,7 @@ namespace lynkpiapp
 
         public DateTime Clock { get => field; private set => NotifyPropertyChanged(ref field, value); }
         public bool IsTriggered { get => field; private set => NotifyPropertyChanged(ref field, value); } = false;
-        public AlarmState AlarmState { get => field; private set => NotifyPropertyChanged(ref field, value); } = AlarmState.ArmedHome;
+        public AlarmState AlarmState { get => field; private set => NotifyPropertyChanged(ref field, value); } = AlarmState.ArmedAway;
 
         public HardwareService(ILogger<HardwareService> logger, IOptions<List<Sensor>> sensors, IOptions<List<User>> users)
         {

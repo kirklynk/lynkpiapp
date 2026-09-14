@@ -3,7 +3,7 @@
 <p style="margin: 0 1rem 1rem 1rem">
     <MudGrid>
         <MudItem xs="12" lg="12" md="12" sm="12">
-            <MudDataGrid T="(string desc, int pin, bool tripped)" Items="_hardwareService.Tripped" SortMode="SortMode.None">
+            <MudDataGrid T="(string desc, int pin, bool tripped)" Items="_hardwareService.Tripped" SortMode="SortMode.None" Dense="true" Bordered="false" Height="100px">
                 <Columns>
                     <PropertyColumn Property="x => x.desc" Title="" />
                 </Columns>
