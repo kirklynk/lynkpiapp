@@ -8,8 +8,7 @@ namespace lynkpiapp
     public class HardwareService : NotifyBase, IDisposable
     {
         bool _disposed;
-        private readonly List<Sensor>? _sensors;
-        private readonly List<User>? _users;
+        private readonly Settings? _settings;
         private readonly GpioController? _controller;
         private readonly List<GpioPin>? _pins;
         private readonly ILogger<HardwareService> _logger;
@@ -19,23 +18,25 @@ namespace lynkpiapp
 
         public DateTime Clock { get => field; private set => NotifyPropertyChanged(ref field, value); }
         public bool IsTriggered { get => field; private set => NotifyPropertyChanged(ref field, value); } = false;
-        public AlarmState AlarmState { get => field; private set => NotifyPropertyChanged(ref field, value); } = AlarmState.ArmedAway;
 
-        public HardwareService(ILogger<HardwareService> logger, IOptions<List<Sensor>> sensors, IOptions<List<User>> users)
+        public TimeSpan CountDownTimer { get => field; private set => NotifyPropertyChanged(ref field, value); }
+        public AlarmState PendingState { get => field; private set => NotifyPropertyChanged(ref field, value); }
+        public AlarmState CurrentState { get => field; private set => NotifyPropertyChanged(ref field, value); } = AlarmState.ArmedAway;
+
+        public HardwareService(ILogger<HardwareService> logger, IOptions<Settings> options)
         {
             _logger = logger;
 
             try
             {
-                ConfigureClockMonitoringService();
+                PendingState = CurrentState;
 
-                _sensors = sensors?.Value ?? [];
-                _users = users?.Value ?? [];
+                ConfigureMonitoringService();
+                _settings = options.Value;
                 _pins = [];
-
                 _controller = new GpioController();
 
-                foreach (var trigger in _sensors)
+                foreach (var trigger in _settings.Sensors)
                 {
                     var pin = _controller.OpenPin(trigger.PinNumber, PinMode.InputPullDown);
                     pin.ValueChanged += Pin_ValueChanged;
@@ -56,11 +57,10 @@ namespace lynkpiapp
             }
         }
 
-
         public List<(string description, bool isPeripheral, bool state)> CheckSensors()
         {
             var opened = new List<(string description, bool isPeripheral, bool state)>();
-            foreach (var item in _sensors ?? [])
+            foreach (var item in _settings.Sensors)
             {
                 var pin = _pins?.FirstOrDefault(x => x.PinNumber == item.PinNumber);
                 if (pin != null)
@@ -83,13 +83,16 @@ namespace lynkpiapp
                 return (false, null);
             }
 
-            AlarmState = alarmState;
+            PendingState = alarmState;
+
             if (alarmState == AlarmState.Disarm)
             {
                 _queue.Clear();
                 Tripped.Clear();
                 IsTriggered = false;
             }
+
+
             return (true, user);
         }
 
@@ -101,7 +104,7 @@ namespace lynkpiapp
                 return (false, null);
             }
 
-            var isValid = _users.FirstOrDefault(u => u.Code == code);
+            var isValid = _settings.Users.FirstOrDefault(u => u.Code == code);
             if (isValid == null)
             {
                 _logger.LogWarning("Invalid code attempted: {Code}", code);
@@ -109,7 +112,7 @@ namespace lynkpiapp
             return (isValid != null, isValid?.Name);
         }
 
-        private void ConfigureClockMonitoringService()
+        private void ConfigureMonitoringService()
         {
             _ = Task.Factory.StartNew(() =>
             {
@@ -117,6 +120,27 @@ namespace lynkpiapp
                 {
                     Clock = DateTime.Now;
                     Thread.Sleep(1000);
+
+                    if (PendingState == CurrentState && CountDownTimer == TimeSpan.FromSeconds(45.0))
+                    {
+                        continue;
+                    }
+
+                    if (PendingState == AlarmState.Disarm)
+                    {
+                        CurrentState = PendingState;
+                        CountDownTimer = TimeSpan.FromSeconds(45);
+                    }
+                    else
+                    {
+                        CountDownTimer = CountDownTimer.Add(TimeSpan.FromSeconds(-1.0));
+                        _logger.LogInformation($"Current count down {CountDownTimer.Seconds}");
+                        if (CountDownTimer.Seconds == 0 || CountDownTimer.Seconds < 0)
+                        {
+                            CurrentState = PendingState;
+                            CountDownTimer = TimeSpan.FromSeconds(45);
+                        }
+                    }
                 }
             }, TaskCreationOptions.LongRunning);
 
@@ -137,10 +161,10 @@ namespace lynkpiapp
         {
 
             var tripped = pinValueChangedEventArgs.ChangeType == PinEventTypes.Falling;
-            var sensor = _sensors.FirstOrDefault(t => t.PinNumber == pinValueChangedEventArgs.PinNumber);
+            var sensor = _settings.Sensors.FirstOrDefault(t => t.PinNumber == pinValueChangedEventArgs.PinNumber);
             sensor?.IsTriggered = tripped;
 
-            if (sensor == null || AlarmState == AlarmState.Disarm)
+            if (sensor == null || CurrentState == AlarmState.Disarm)
             {
                 _logger.LogWarning("Ignoring raise alarm.");
                 return;
@@ -153,7 +177,7 @@ namespace lynkpiapp
             _logger.LogInformation("Checking whether to raised alarm");
 
             //Ignoring peripheral sensors when in ArmHome mode
-            if (AlarmState == AlarmState.ArmedHome && !sensor.IsPeripheral)
+            if (CurrentState == AlarmState.ArmedHome && !sensor.IsPeripheral)
             {
                 return;
             }

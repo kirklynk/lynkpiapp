@@ -120,7 +120,7 @@ html, body, .mud-main-content {
 }
 
 .shield-red > * > path {
-    fill: rgb(128,0,0)
+    fill: rgb(177, 31, 31)
 }
 
 .shield-icon {
@@ -130,7 +130,7 @@ html, body, .mud-main-content {
     transform-origin: center;
     /* Apply the animation: name, duration, timing, infinite loop */
     animation: pulsate 3s ease-in-out infinite;
-    filter: drop-shadow(10px 10px 8px rgba(0, 0, 0, 1));
+    filter: drop-shadow(5px 10px 8px rgba(0, 0, 0, 1));
 }
 
 @keyframes pulsate {

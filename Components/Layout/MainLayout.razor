@@ -39,6 +39,6 @@
         };
     }
 
-    Color Color => _hardwareService.AlarmState != AlarmState.Disarm ? Color.Error : Color.Default;
+    Color Color => _hardwareService.CurrentState != AlarmState.Disarm ? Color.Error : Color.Default;
 
 }

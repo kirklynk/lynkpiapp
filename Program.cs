@@ -17,8 +17,7 @@ builder.Services.AddMudServices(config =>
 });
 
 builder.Services.AddSingleton<HardwareService>();
-builder.Services.Configure<List<User>>(builder.Configuration.GetSection("Users"));
-builder.Services.Configure<List<Sensor>>(builder.Configuration.GetSection("Sensors"));
+builder.Services.Configure<Settings>(builder.Configuration.GetSection(Settings.NAME));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
