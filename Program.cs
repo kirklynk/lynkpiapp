@@ -17,6 +17,8 @@ builder.Services.AddMudServices(config =>
 });
 
 builder.Services.AddSingleton<HardwareService>();
+builder.Services.AddSingleton<InAppNotificationService>();
+
 builder.Services.Configure<Settings>(builder.Configuration.GetSection(Settings.NAME));
 var app = builder.Build();
 

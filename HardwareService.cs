@@ -121,7 +121,7 @@ namespace lynkpiapp
                     Clock = DateTime.Now;
                     Thread.Sleep(1000);
 
-                    if (PendingState == CurrentState && CountDownTimer == TimeSpan.FromSeconds(45.0))
+                    if (PendingState == CurrentState && CountDownTimer == TimeSpan.FromSeconds(_settings!.Delay))
                     {
                         continue;
                     }
@@ -129,7 +129,7 @@ namespace lynkpiapp
                     if (PendingState == AlarmState.Disarm)
                     {
                         CurrentState = PendingState;
-                        CountDownTimer = TimeSpan.FromSeconds(45);
+                        CountDownTimer = TimeSpan.FromSeconds(_settings!.Delay);
                     }
                     else
                     {
@@ -138,7 +138,7 @@ namespace lynkpiapp
                         if (CountDownTimer.Seconds == 0 || CountDownTimer.Seconds < 0)
                         {
                             CurrentState = PendingState;
-                            CountDownTimer = TimeSpan.FromSeconds(45);
+                            CountDownTimer = TimeSpan.FromSeconds(_settings!.Delay);
                         }
                     }
                 }
@@ -161,7 +161,7 @@ namespace lynkpiapp
         {
 
             var tripped = pinValueChangedEventArgs.ChangeType == PinEventTypes.Falling;
-            var sensor = _settings.Sensors.FirstOrDefault(t => t.PinNumber == pinValueChangedEventArgs.PinNumber);
+            var sensor = _settings!.Sensors.FirstOrDefault(t => t.PinNumber == pinValueChangedEventArgs.PinNumber);
             sensor?.IsTriggered = tripped;
 
             if (sensor == null || CurrentState == AlarmState.Disarm)

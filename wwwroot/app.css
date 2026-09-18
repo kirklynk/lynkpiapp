@@ -124,8 +124,8 @@ html, body, .mud-main-content {
 }
 
 .shield-icon {
-    width: 100px;
-    height: 100px;
+    width: 130px;
+    height: 130px;
     /* Critical for centering the scale transformation */
     transform-origin: center;
     /* Apply the animation: name, duration, timing, infinite loop */

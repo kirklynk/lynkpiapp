@@ -1,5 +1,5 @@
 ﻿@page "/"
-@inject HardwareService _hardwareService
+
 @inject ISnackbar _snackbar
 @inject ILogger<Home> _logger
 
@@ -9,10 +9,10 @@
     <MudGrid Style="padding: 1rem;">
         <MudItem lg="4" md="4" sm="4" xs="4">
             <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
-                <MudButton Variant="Variant.Filled" DropShadow="true" Color="Color.Default" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.ArmedAway))" Disabled="@_disabled" Class="button-fullwidth" StartIcon="@Icons.Material.Filled.AirplaneTicket">
+                <MudButton Variant="Variant.Filled" DropShadow="true" Color="Color.Error" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.ArmedAway))" Disabled="@_disabled" Class="button-fullwidth" StartIcon="@Icons.Material.Filled.AirplaneTicket">
                     ARM AWAY
                 </MudButton>
-                <MudButton Variant="Variant.Filled" DropShadow="true" Color="Color.Default" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.ArmedHome))" Disabled="@_disabled" Class="button-fullwidth" StartIcon="@Icons.Material.Filled.LocalPolice">
+                <MudButton Variant="Variant.Filled" DropShadow="true" Color="Color.Error" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.ArmedHome))" Disabled="@_disabled" Class="button-fullwidth" StartIcon="@Icons.Material.Filled.LocalPolice">
                     ARM HOME
                 </MudButton>
                 <MudButton Variant="Variant.Filled" OnClick="(async () => await ArmDisarmAlarmAsync(AlarmState.Disarm))" Class="button-fullwidth" Color="Color.Primary">
@@ -27,6 +27,7 @@
                         @_hardwareService.Clock.ToString("h:mm tt")
                     </text>
                 </div>
+
                 <div>
                     <i>
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 256 256" xml:space="preserve" class="shield-icon @(_hardwareService.CurrentState == AlarmState.Disarm ? "shield-green" : "shield-red")">
@@ -40,8 +41,9 @@
                         </svg>
                     </i>
                 </div>
+
                 <div style="font-size: 1.1rem; text-transform: uppercase; text-align: center;">@_alarmState</div>
-                             
+
                 @if (_hardwareService.IsTriggered)
                 {
                     <div>
@@ -94,6 +96,22 @@
                 await InvokeAsync(ShowTrippedSensorsAsync);
             }
         };
+
+        _InAppNotificationService.PropertyChanged += async (sender, args) =>
+        {
+            if (args.PropertyName == nameof(InAppNotificationService.Message))
+            {
+                if (!string.IsNullOrWhiteSpace(_InAppNotificationService.Message))
+                {
+                    await InvokeAsync(() =>
+                    {
+                        _snackbar.Clear();
+                        using var s = _snackbar.Add(_InAppNotificationService.Message, severity: Severity.Success);
+                    });
+                }
+            }
+        };
+
         await base.OnInitializedAsync();
     }
 
@@ -135,7 +153,9 @@
                 if (list.Count > 0)
                 {
                     var sensorDialog = await DialogService.ShowAsync<CheckSensorsDialog>("Check the following sensors:", new DialogParameters<CheckSensorsDialog>() { { x => x.OpenSensors, list.Select(x => x.description).ToList<string>() }, { x => x.ShowBypassButton, true } }, new DialogOptions { CloseOnEscapeKey = true, BackdropClick = false, CloseOnNavigation = true, FullWidth = true });
+
                     var sensorDialogResult = await sensorDialog.Result;
+
                     if (sensorDialogResult!.Canceled)
                     {
                         _logger.LogInformation("Canceled");
@@ -167,7 +187,7 @@
                 if (valid)
                 {
                     var armedState = state == AlarmState.Disarm ? "disarmed" : "armed";
-                    _snackbar.Add($"System {armedState} by {user}", severity: Severity.Success);
+                    _InAppNotificationService.PushMessage($"System {armedState} by {user}");
                 }
                 else
                 {
@@ -181,11 +201,13 @@
     {
         var dialogResult = await DialogService.ShowAsync<TriggeredSensorsDialog>("TRIGGERED SENSORS", new DialogOptions { FullWidth = true });
         var result = await dialogResult.Result;
+
         if (result!.Canceled == false && result.Data != null)
         {
             var state = (AlarmState)result.Data;
             await ArmDisarmAlarmAsync(state);
         }
+
     }
 }
 
