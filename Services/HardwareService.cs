@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Device.Gpio;
 
-namespace lynkpiapp
+namespace lynkpiapp.Services
 {
     public class HardwareService : NotifyBase, IDisposable
     {
@@ -16,12 +16,38 @@ namespace lynkpiapp
 
         public ObservableCollection<(string desc, int number, bool isTripped)> Tripped { get; } = new ObservableCollection<(string, int number, bool)>();
 
-        public DateTime Clock { get => field; private set => NotifyPropertyChanged(ref field, value); }
+        public DateTime Clock
+        {
+            get => field; private set
+            {
+                NotifyPropertyChanged(ref field, value);
+            }
+        }
+
+
         public bool IsTriggered { get => field; private set => NotifyPropertyChanged(ref field, value); } = false;
 
         public TimeSpan CountDownTimer { get => field; private set => NotifyPropertyChanged(ref field, value); }
         public AlarmState PendingState { get => field; private set => NotifyPropertyChanged(ref field, value); }
         public AlarmState CurrentState { get => field; private set => NotifyPropertyChanged(ref field, value); } = AlarmState.ArmedAway;
+
+        public string AlarmStateText
+        {
+            get
+            {
+                switch (this.CurrentState)
+                {
+                    case AlarmState.ArmedAway:
+                        return "Armed Away";
+                    case AlarmState.ArmedHome:
+                        return "Armed Home";
+                    case AlarmState.Disarm:
+                        return "Disarmed";
+                    default:
+                        return "Unknown";
+                }
+            }
+        }
 
         public HardwareService(ILogger<HardwareService> logger, IOptions<Settings> options)
         {
@@ -60,7 +86,7 @@ namespace lynkpiapp
         public List<(string description, bool isPeripheral, bool state)> CheckSensors()
         {
             var opened = new List<(string description, bool isPeripheral, bool state)>();
-            foreach (var item in _settings.Sensors)
+            foreach (var item in _settings!.Sensors)
             {
                 var pin = _pins?.FirstOrDefault(x => x.PinNumber == item.PinNumber);
                 if (pin != null)
@@ -104,7 +130,7 @@ namespace lynkpiapp
                 return (false, null);
             }
 
-            var isValid = _settings.Users.FirstOrDefault(u => u.Code == code);
+            var isValid = _settings!.Users.FirstOrDefault(u => u.Code == code);
             if (isValid == null)
             {
                 _logger.LogWarning("Invalid code attempted: {Code}", code);

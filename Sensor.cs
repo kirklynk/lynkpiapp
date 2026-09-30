@@ -26,6 +26,5 @@
             get => field;
             set => NotifyPropertyChanged(ref field, value);
         }
-
     }
 }

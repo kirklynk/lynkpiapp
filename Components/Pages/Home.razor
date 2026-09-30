@@ -41,8 +41,14 @@
                         </svg>
                     </i>
                 </div>
+                <div>
+                     <div class="lightbar">
+                        <div class="light @(_hardwareService.IsTriggered ? "blue" : "")"></div>
+                        <div class="light @(_hardwareService.IsTriggered ? "red" : "")"></div>
+                     </div>
+                </div>
 
-                <div style="font-size: 1.1rem; text-transform: uppercase; text-align: center;">@_alarmState</div>
+                <div style="font-size: 1.1rem; text-transform: uppercase; text-align: center;">@_hardwareService.AlarmStateText</div>
 
                 @if (_hardwareService.IsTriggered)
                 {
@@ -60,6 +66,9 @@
             </MudStack>
         </MudItem>
     </MudGrid>
+    <div style="text-align: center;">
+        <MudText Color="Color.Default">&nbsp; @_inAppNotificationService.Message &nbsp;</MudText>
+    </div>
 </div>
 
 
@@ -68,45 +77,31 @@
     bool _isRendered = false;
     bool _disabled => _hardwareService.CurrentState == AlarmState.ArmedAway || _hardwareService.CurrentState == AlarmState.ArmedHome || _hardwareService.PendingState == AlarmState.ArmedAway || _hardwareService.PendingState == AlarmState.ArmedHome;
 
-    string _alarmState
-    {
-        get
-        {
-            switch (_hardwareService.CurrentState)
-            {
-                case AlarmState.ArmedAway:
-                    return "Armed Away";
-                case AlarmState.ArmedHome:
-                    return "Armed Home";
-                case AlarmState.Disarm:
-                    return "Disarmed";
-                default:
-                    return "Unknown";
-            }
-        }
-    }
+    
 
     protected override async Task OnInitializedAsync()
     {
         _hardwareService.PropertyChanged += async (sender, args) =>
         {
             await InvokeAsync(StateHasChanged);
-            if (_isRendered && args.PropertyName == nameof(_hardwareService.IsTriggered) && _hardwareService.IsTriggered)
+            if (_isRendered)
             {
-                await InvokeAsync(ShowTrippedSensorsAsync);
+                if (args.PropertyName == nameof(_hardwareService.IsTriggered) && _hardwareService.IsTriggered)
+                    await InvokeAsync(ShowTrippedSensorsAsync);
             }
         };
 
-        _InAppNotificationService.PropertyChanged += async (sender, args) =>
+        
+        _inAppNotificationService.PropertyChanged += async (sender, args) =>
         {
             if (args.PropertyName == nameof(InAppNotificationService.Message))
             {
-                if (!string.IsNullOrWhiteSpace(_InAppNotificationService.Message))
+                if (!string.IsNullOrWhiteSpace(_inAppNotificationService.Message))
                 {
                     await InvokeAsync(() =>
                     {
                         _snackbar.Clear();
-                        using var s = _snackbar.Add(_InAppNotificationService.Message, severity: Severity.Success);
+                        using var s = _snackbar.Add(_inAppNotificationService.Message, severity: Severity.Success);
                     });
                 }
             }
@@ -152,7 +147,7 @@
 
                 if (list.Count > 0)
                 {
-                    var sensorDialog = await DialogService.ShowAsync<CheckSensorsDialog>("Check the following sensors:", new DialogParameters<CheckSensorsDialog>() { { x => x.OpenSensors, list.Select(x => x.description).ToList<string>() }, { x => x.ShowBypassButton, true } }, new DialogOptions { CloseOnEscapeKey = true, BackdropClick = false, CloseOnNavigation = true, FullWidth = true });
+                    var sensorDialog = await DialogService.ShowAsync<CheckSensorsDialog>("", new DialogParameters<CheckSensorsDialog>() { { x => x.OpenSensors, list.Select(x => x.description).ToList<string>() }, { x => x.ShowBypassButton, true } }, new DialogOptions { CloseOnEscapeKey = true, BackdropClick = false, CloseOnNavigation = true, FullWidth = true, NoHeader = true });
 
                     var sensorDialogResult = await sensorDialog.Result;
 
@@ -187,7 +182,7 @@
                 if (valid)
                 {
                     var armedState = state == AlarmState.Disarm ? "disarmed" : "armed";
-                    _InAppNotificationService.PushMessage($"System {armedState} by {user}");
+                    _inAppNotificationService.PushMessage($"System {armedState} by {user}");
                 }
                 else
                 {

@@ -10,9 +10,11 @@
 @using lynkpiapp.Components
 @using lynkpiapp.Components.Dialogs
 @using lynkpiapp.Components.Layout
+@using lynkpiapp.Services
 
 @using MudBlazor
 
 @inject IDialogService DialogService
-@inject InAppNotificationService _InAppNotificationService
+@inject InAppNotificationService _inAppNotificationService
 @inject HardwareService _hardwareService
+@inject IJSRuntime _js

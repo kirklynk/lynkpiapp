@@ -1,4 +1,4 @@
-﻿namespace lynkpiapp
+﻿namespace lynkpiapp.Services
 {
     public class InAppNotificationService : NotifyBase
     {

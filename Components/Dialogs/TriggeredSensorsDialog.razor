@@ -3,15 +3,15 @@
 <p style="margin: 0 1rem 1rem 1rem">
     <MudGrid>
         <MudItem xs="12" lg="12" md="12" sm="12">
-            <MudDataGrid T="(string desc, int pin, bool tripped)" Items="_hardwareService.Tripped" SortMode="SortMode.None" Dense="true" Bordered="false" Height="100px">
+            <MudDataGrid T="(string desc, int pin, bool tripped)" Items="_hardwareService.Tripped" SortMode="SortMode.None" Breakpoint="Breakpoint.None" Dense="true" Bordered="false" Height="100px">
                 <Columns>
-                    <PropertyColumn Property="x => x.desc" Title="" />
+                    <PropertyColumn Property="x => x.desc" Title=""  />
                 </Columns>
             </MudDataGrid>
         </MudItem>
 
         <MudItem xs="4" lg="4" md="4" sm="4">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="keypad-button-0" Style="width: 100%;" OnClick="() => DialogReference?.CancelAll()">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="keypad-button-0" Style="width: 100%;" OnClick="() => DialogReference?.CancelAll()">Hide</MudButton>
         </MudItem>
         <MudItem xs="4" lg="4" md="4" sm="4">
 
@@ -26,4 +26,27 @@
 
     [CascadingParameter]
     private IMudDialogInstance? DialogReference { get; set; }
+
+    bool _isRendered = false;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _hardwareService?.Tripped.CollectionChanged += (s, e) =>
+        {
+            if (_isRendered && _hardwareService.Tripped.Count == 0)
+            {
+                InvokeAsync(() => DialogReference?.CancelAll());
+            }
+        };
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        if (firstRender)
+        {
+            _isRendered = true;
+        }
+    }
 }

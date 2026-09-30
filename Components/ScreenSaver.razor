@@ -1,0 +1,75 @@
+﻿@inject IHttpClientFactory _factory
+
+<div style="height: 100%; width: 100%; display: flex; background-image: url('@($"https://bing.com/{_bingImage?.Url}")'); background-position: center; flex-direction: column; justify-content: flex-end; ">
+
+    <MudSpacer />
+    <MudPaper Style="background-color: rgba(128, 128, 128, 0.8); padding: 0.4rem;" Outlined="true" Elevation="5">
+        <MudStack Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
+            <MudText Typo="Typo.h4" Color="Color.Secondary">@_hardwareService.AlarmStateText</MudText>
+        </MudStack>
+        <MudStack Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
+            <MudText Typo="Typo.h5">@_hardwareService.Clock.ToLongDateString()</MudText>
+        </MudStack>
+        <MudStack Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
+            <MudText Typo="Typo.h2" Style="text-transform: uppercase;">@_hardwareService.Clock.ToString("h:mm:ss tt")</MudText>
+        </MudStack>
+        <MudStack Justify="Justify.FlexEnd" AlignItems="AlignItems.Center">
+            <MudText Typo="Typo.caption" Color="Color.Tertiary">Image: @_bingImage?.Copyright</MudText>
+        </MudStack>
+    </MudPaper>
+</div>
+
+@code {
+
+    private HttpClient? _client;
+    private BingImage? _bingImage;
+    int _dayOfMonth = -1;
+    bool rendered = false;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _client = _factory.CreateClient("bing");
+        _hardwareService.PropertyChanged += async (s, e) =>
+        {
+            if (e.PropertyName == nameof(_hardwareService.Clock) || e.PropertyName == nameof(_hardwareService.AlarmStateText) || e.PropertyName == nameof(_hardwareService.CurrentState))
+            {
+
+                if (rendered && e.PropertyName == nameof(_hardwareService.Clock) && _hardwareService.Clock.Day != _dayOfMonth)
+                {
+                    _dayOfMonth = _hardwareService.Clock.Day;
+                    await GetBingImageAsync();
+                }
+
+                await InvokeAsync(StateHasChanged);
+            }
+        };
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            rendered = true;
+        }
+    }
+
+    async Task GetBingImageAsync()
+    {
+        try
+        {
+            if (_client is not null)
+            {
+                BingImageOfTheDay? bingImage = await _client.GetFromJsonAsync<BingImageOfTheDay>("HPImageArchive.aspx?format=js&idx=0&n=1");
+                _bingImage = bingImage?.Images[0];
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            //Intentionally left blank
+        }
+    }
+
+}

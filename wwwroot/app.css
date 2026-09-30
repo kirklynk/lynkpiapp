@@ -146,3 +146,59 @@ html, body, .mud-main-content {
         transform: scale(1);
     }
 }
+
+/* Full-width Lightbar Anchored to the Bottom */
+.lightbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 20px; /* Slimmer profile for a bottom bar look */
+    display: flex;
+    background-color: #222;
+    border-top: 1px solid #333;
+    box-shadow: 0 -1px 0px rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+}
+
+/* Base Styling for both lights */
+.light {
+    flex: 1;
+    height: 100%;
+}
+
+/* Blue Light (Left) */
+.blue {
+    background-color: #0000ff;
+    animation: flash-blue 0.8s infinite steps(1);
+}
+
+/* Red Light (Right) */
+.red {
+    background-color: #ff0000;
+    animation: flash-red 0.8s infinite steps(1);
+}
+
+@keyframes flash-blue {
+    0%, 15%, 30%, 45% {
+        background-color: #0000ff;
+        box-shadow: 0 -2px 80px 3px #0000ff, inset 0 0 20px #fff;
+    }
+
+    7.5%, 22.5%, 50%, 100% {
+        background-color: #001133;
+        box-shadow: none;
+    }
+}
+
+@keyframes flash-red {
+    0%, 50%, 65%, 80% {
+        background-color: #330000;
+        box-shadow: none;
+    }
+
+    55%, 70%, 85%, 97% {
+        background-color: #ff0000;
+        box-shadow: 0 -2px 80px 3px #ff0000, inset 0 0 20px #fff;
+    }
+}

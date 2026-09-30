@@ -1,5 +1,6 @@
 using lynkpiapp;
 using lynkpiapp.Components;
+using lynkpiapp.Services;
 using MudBlazor.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,6 +19,7 @@ builder.Services.AddMudServices(config =>
 
 builder.Services.AddSingleton<HardwareService>();
 builder.Services.AddSingleton<InAppNotificationService>();
+builder.Services.AddHttpClient("bing", client => { client.BaseAddress = new Uri("https://bing.com"); });
 
 builder.Services.Configure<Settings>(builder.Configuration.GetSection(Settings.NAME));
 var app = builder.Build();
